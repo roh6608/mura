@@ -38,6 +38,11 @@ class Worker(ABC):
         process.start()
         self._process = process
 
+    def join(self, timeout: float | None = None) -> None:
+        """Wait for the worker process to finish of its own accord."""
+        if self._process is not None:
+            self._process.join(timeout)
+
     def request_shutdown(self) -> None:
         """Signal the worker to stop without waiting for it to exit."""
         self._stop_event.set()

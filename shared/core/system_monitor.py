@@ -33,8 +33,6 @@ class SystemMonitorWorker(Worker):
             self._log_system_usage()
             self._cleanup_directory(self.logs_dir, self.max_logs_size_bytes)
 
-            # Cooperative sleep: wakes immediately when a stop is requested so
-            # shutdown isn't blocked for a full logging period.
             self.sleep(self.logging_period_seconds)
 
     def _log_system_usage(self) -> None:
@@ -45,7 +43,7 @@ class SystemMonitorWorker(Worker):
             cpu_freq = psutil.cpu_freq()
 
             stats = {
-                "date_time": datetime.now().strftime("%Y%m%d_%H%M%S"),
+                "date_time": datetime.now().astimezone().strftime("%Y%m%d_%H%M%S"),
                 "cpu_total_percent": psutil.cpu_percent(interval=None),
                 "cpu_per_core_percent": psutil.cpu_percent(interval=None, percpu=True),
                 "cpu_freq_mhz": round(cpu_freq.current, 2) if cpu_freq else None,
