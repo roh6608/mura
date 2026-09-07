@@ -1,8 +1,8 @@
+"""Fixed invariants of the finite element model: element type, solver and tensor ordering."""
+
 # element type 11 in gmsh corresponds to a tet10.
 ELEMENT_TYPE = 11
 
-# Size at which the AMG hierarchy stops coarsening and switches to a direct
-# solve on the coarsest level.
 AMG_MAX_COARSE = 500
 
 # Component order of the symmetric strain and stress tensors in Voigt notation.

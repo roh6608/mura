@@ -1,8 +1,11 @@
+"""Reading gmsh mesh files into the simulation's mesh dataclass."""
+
 from pathlib import Path
 from types import ModuleType
 
 import numpy as np
 from loguru import logger
+from numpy.typing import NDArray
 
 from fea.core.constants import ELEMENT_TYPE
 from fea.core.types import MeshData
@@ -10,12 +13,14 @@ from fea.utils.context_managers import gmsh_session
 
 
 class MeshReader:
+    """Reader for gmsh mesh files."""
+
     def __init__(self) -> None:
-        pass
+        """Create a reader holding no mesh."""
 
     def _gmsh_load_mesh_file(self, msh: ModuleType, file_path: str) -> None:
         """
-        Opens and loads the gmsh file.
+        Open and load the gmsh file.
 
         :param msh: The initialised gmsh module from gmsh_session.
         :param file_path: File path to gmsh file.
@@ -30,7 +35,7 @@ class MeshReader:
             logger.error(f"Internal Gmsh error: {e}")
             raise
 
-    def _extract_nodes(self, msh: ModuleType) -> None:
+    def _extract_nodes(self, msh: ModuleType) -> tuple[NDArray[np.float64], NDArray[np.int32]]:
         node_tags, coords, _ = msh.model.mesh.getNodes()
         nodes = np.array(coords, dtype=np.float64).reshape(-1, 3)
 
@@ -40,10 +45,10 @@ class MeshReader:
         return nodes, tag_mapper
 
     def load(self, file_path: Path) -> MeshData | None:
-        """
-        Work for the MeshWorker to complete. Instantiates gmsh context manager
-        opens gmsh file and then extracts the mesh into a MeshData dataclass
+        """Load the gmsh file and extract it into a 'MeshData' dataclass.
 
+        Work for the MeshWorker to complete: instantiates the gmsh context manager, opens the file, then extracts the
+        mesh.
 
         :param filepath: filepath of gmsh file.
         :type filepath: str
@@ -70,23 +75,15 @@ class MeshReader:
 
                         name_to_tag[name] = g_tag
 
-                        _, group_node_tags = msh.model.mesh.getNodesForPhysicalGroup(
-                            dim, g_tag
-                        )
+                        _, group_node_tags = msh.model.mesh.getNodesForPhysicalGroup(dim, g_tag)
 
                         if group_node_tags.size > 0:
                             node_indices = tag_mapper[group_node_tags.astype(np.int32)]
                             node_groups[g_tag] = node_indices
 
-                            dim_name = {
-                                0: "Point",
-                                1: "Curve",
-                                2: "Surface",
-                                3: "Volume",
-                            }[dim]
+                            dim_name = {0: "Point", 1: "Curve", 2: "Surface", 3: "Volume"}[dim]
                             logger.info(
-                                f"Found Physical {dim_name}: '{name}' "
-                                f"(ID: {g_tag}) with {len(node_indices)} nodes."
+                                f"Found Physical {dim_name}: '{name}' (ID: {g_tag}) with {len(node_indices)} nodes."
                             )
 
                 all_elements = []
@@ -105,9 +102,7 @@ class MeshReader:
                             conn = tag_mapper[raw_nodes].reshape(-1, 10)
 
                             all_elements.append(conn)
-                            all_tags.append(
-                                np.full(conn.shape[0], found_phys_id, dtype=np.int32)
-                            )
+                            all_tags.append(np.full(conn.shape[0], found_phys_id, dtype=np.int32))
 
                 if not all_elements:
                     raise ValueError("No tetrahedral elements found in the mesh.")
@@ -115,9 +110,7 @@ class MeshReader:
                 elements_final = np.vstack(all_elements)
                 tags_final = np.concatenate(all_tags)
 
-                logger.success(
-                    f"Mesh Loaded: {nodes.shape[0]} nodes, {elements_final.shape[0]} elements."
-                )
+                logger.success(f"Mesh Loaded: {nodes.shape[0]} nodes, {elements_final.shape[0]} elements.")
 
                 return MeshData(
                     nodes=nodes,

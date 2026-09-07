@@ -1,3 +1,5 @@
+"""Process manager owning the simulation's worker processes."""
+
 from collections.abc import Sequence
 
 from shared.core.process_manager import ProcessManager
@@ -9,10 +11,7 @@ from fea.workers.solver import SolverWorker
 
 
 class FeaProcessManager(ProcessManager[SimConfig]):
-    """
-    Process manager for the sim-fea application: a system monitor and the
-    FEA solver worker.
-    """
+    """Process manager for the sim-fea application: a system monitor and the FEA solver worker."""
 
     def _create_workers(self) -> Sequence[Worker]:
         self.monitor = SystemMonitorWorker(

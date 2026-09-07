@@ -1,3 +1,5 @@
+"""Simulation configuration dataclasses and the loader for a Python config file."""
+
 import importlib.util
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,9 +13,7 @@ CONFIG_ATTRIBUTE = "config"
 
 @dataclass(frozen=True)
 class MonitoringConfig:
-    """
-    Settings for the system monitor worker.
-    """
+    """Settings for the system monitor worker."""
 
     logs_dir: Path = Path("logs")
     cleanup_threshold_gigabytes: float = 5.0
@@ -22,9 +22,9 @@ class MonitoringConfig:
 
 @dataclass(frozen=True)
 class SimConfig:
-    """
-    Simulation parameters, defined in a user-supplied Python file as
-    ``config = SimConfig(...)`` and loaded with ``load_config``.
+    """Simulation parameters for one finite element run.
+
+    Defined in a user-supplied Python file as 'config = SimConfig(...)' and loaded with 'load_config'.
     """
 
     materials: MaterialData
@@ -37,10 +37,10 @@ class SimConfig:
 
 def load_config(config_path: Path) -> SimConfig:
     """
-    Load a ``SimConfig`` from a Python configuration file.
+    Load a 'SimConfig' from a Python configuration file.
 
-    The file is imported and must define a module-level ``config`` attribute
-    holding a ``SimConfig`` instance.
+    The file is imported and must define a module-level 'config' attribute
+    holding a 'SimConfig' instance.
     """
     if not config_path.is_file():
         logger.error(f"Configuration file not found: {config_path}")
@@ -60,10 +60,7 @@ def load_config(config_path: Path) -> SimConfig:
 
     config = getattr(module, CONFIG_ATTRIBUTE, None)
     if not isinstance(config, SimConfig):
-        logger.error(
-            f"{config_path} must define `{CONFIG_ATTRIBUTE} = SimConfig(...)`, "
-            f"found {type(config).__name__}"
-        )
+        logger.error(f"{config_path} must define '{CONFIG_ATTRIBUTE} = SimConfig(...)', found {type(config).__name__}")
         raise SystemExit(1)
 
     return config

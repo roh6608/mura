@@ -1,3 +1,5 @@
+"""Domain data types for the finite element simulation."""
+
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -6,10 +8,9 @@ from numpy.typing import NDArray
 
 
 class PhysicalGroup(StrEnum):
-    """
-    Physical group names used in the mesh files. Members compare equal to
-    their string values, so they can be used directly against gmsh group
-    names.
+    """Physical group names used in the mesh files.
+
+    Members compare equal to their string values, so they can be used directly against gmsh group names.
     """
 
     INCLUSION = "Inclusion"
@@ -19,29 +20,21 @@ class PhysicalGroup(StrEnum):
 
 @dataclass
 class MeshData:
-    """
-    For storing mesh data.
-    """
+    """For storing mesh data."""
 
     nodes: NDArray[np.float64]
     elements: NDArray[np.int32]
     element_tags: NDArray[np.int32]
     group_map: dict[str, int]
-    node_groups: dict[int, NDArray[np.int32]] = field(
-        default_factory=dict[int, NDArray[np.int32]]
-    )
+    node_groups: dict[int, NDArray[np.int32]] = field(default_factory=dict[int, NDArray[np.int32]])
     name: str = "unnamed_mesh"
 
     def get_nodes_by_group(self, phys_id: int) -> NDArray[np.int32]:
-        """
-        Returns the pre-calculated node indices for a specific physical group ID.
-        """
+        """Return the pre-calculated node indices for a specific physical group ID."""
         return self.node_groups.get(phys_id, np.array([], dtype=np.int32))
 
     def get_group_name(self, phys_id: int) -> str:
-        """
-        Reverse lookup to find a group name based on its ID.
-        """
+        """Reverse lookup to find a group name based on its ID."""
         for name, p_id in self.group_map.items():
             if p_id == phys_id:
                 return name
@@ -50,9 +43,7 @@ class MeshData:
 
 @dataclass
 class FEMResult:
-    """
-    For storing FEM results.
-    """
+    """For storing FEM results."""
 
     mesh_name: str
     nodes: NDArray[np.float64]
@@ -65,9 +56,7 @@ class FEMResult:
 
 @dataclass
 class MaterialData:
-    """
-    For storing material intrinsic properties.
-    """
+    """For storing material intrinsic properties."""
 
     youngs_modulus: float
     poissons_ratio: float
@@ -75,9 +64,7 @@ class MaterialData:
 
 @dataclass(frozen=True)
 class EigenStrain:
-    """
-    Prescribed eigenstrain components for a physical group (Voigt order).
-    """
+    """Prescribed eigenstrain components for a physical group."""
 
     group: PhysicalGroup
     exx: float
@@ -90,9 +77,7 @@ class EigenStrain:
 
 @dataclass(frozen=True)
 class DirichletBC:
-    """
-    Prescribed displacement for a physical group. None means that axis is free.
-    """
+    """Prescribed displacement for a physical group. None means that axis is free."""
 
     group: PhysicalGroup
     ux: float | None

@@ -1,3 +1,5 @@
+"""Exporting solver results to VTK unstructured grids."""
+
 from pathlib import Path
 
 import numpy as np
@@ -11,23 +13,22 @@ from fea.core.types import FEMResult
 
 
 class Renderer:
+    """Writer that exports solver results to VTK unstructured grids."""
+
     def __init__(self) -> None:
-        pass
+        """Create a renderer holding no grid."""
 
     def _to_vtk_array(self, data: NDArray[np.float64], name: str) -> vtk.vtkDataArray:
-        """
-        Converts a numpy array to a named VTK array. The data is copied, so
-        the VTK array does not alias the numpy buffer.
+        """Convert a numpy array to a named VTK array.
+
+        The data is copied, so the VTK array does not alias the numpy buffer.
         """
         vtk_array = numpy_support.numpy_to_vtk(np.ascontiguousarray(data), deep=1)
         vtk_array.SetName(name)
         return vtk_array
 
     def _build_grid(self, result: FEMResult) -> vtk.vtkUnstructuredGrid:
-        """
-        Builds the unstructured grid of tet10 cells with the nodal results
-        attached as point data.
-        """
+        """Build the unstructured grid of tet10 cells with the nodal results attached as point data."""
         num_elems = result.elements.shape[0]
 
         vtk_points = vtk.vtkPoints()
@@ -38,23 +39,16 @@ class Renderer:
         # VTK_QUADRATIC_TETRA.
         cells_numpy = result.elements.astype(np.int64)[:, VTK_TET10_FROM_GMSH]
 
-        connectivity = np.hstack(
-            [np.full((num_elems, 1), cells_numpy.shape[1], dtype=np.int64), cells_numpy]
-        ).flatten()
+        connectivity = np.hstack([np.full((num_elems, 1), cells_numpy.shape[1], dtype=np.int64), cells_numpy]).flatten()
 
         cell_array = vtk.vtkCellArray()
-        cell_array.SetCells(
-            num_elems, numpy_support.numpy_to_vtkIdTypeArray(connectivity, deep=1)
-        )
+        cell_array.SetCells(num_elems, numpy_support.numpy_to_vtkIdTypeArray(connectivity, deep=1))
 
         cell_types = np.full(num_elems, vtk.VTK_QUADRATIC_TETRA, dtype=np.uint8)
 
         vtk_grid = vtk.vtkUnstructuredGrid()
         vtk_grid.SetPoints(vtk_points)
-        vtk_grid.SetCells(
-            numpy_support.numpy_to_vtk(cell_types, deep=1, array_type=vtk.VTK_UNSIGNED_CHAR),
-            cell_array,
-        )
+        vtk_grid.SetCells(numpy_support.numpy_to_vtk(cell_types, deep=1, array_type=vtk.VTK_UNSIGNED_CHAR), cell_array)
 
         point_data = vtk_grid.GetPointData()
         point_data.AddArray(self._to_vtk_array(result.displacements.reshape(-1, 3), "Displacement"))
@@ -71,17 +65,14 @@ class Renderer:
 
     def export(self, result: FEMResult, filename: Path) -> None:
         """
-        Exporting data to vtu file
+        Export the data to a vtu file.
 
         :param result: FEM results.
         :type result: FEMResult
         :param filename: Filename to save to.
         :type filename: Path
         """
-        logger.info(
-            f"Building VTK grid: {result.nodes.shape[0]} nodes, "
-            f"{result.elements.shape[0]} elements"
-        )
+        logger.info(f"Building VTK grid: {result.nodes.shape[0]} nodes, {result.elements.shape[0]} elements")
 
         try:
             vtk_grid = self._build_grid(result)

@@ -1,3 +1,5 @@
+"""Entry point for the finite element simulation application."""
+
 from loguru import logger
 
 from fea.core.config import load_config
@@ -6,6 +8,7 @@ from fea.utils.arg_parser import parse_args
 
 
 def main() -> None:
+    """Run the finite element simulation described by the configuration file."""
     args = parse_args()
     config = load_config(args.config)
     logger.info(f"Loaded configuration from {args.config}")

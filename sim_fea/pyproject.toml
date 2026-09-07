@@ -8,28 +8,99 @@ packages = ["src/fea"]
 [project]
 name = "sim-fea"
 version = "0.1.0"
-description = "Add your description here"
+description = "Eigenstrain FEA"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "gmsh>=4.15.2",
     "loguru>=0.7.3",
     "mura-shared",
-    "numpy>=2.5.1",
+    "numpy==2.5.2",
     "pathlib>=1.0.1",
     "pyamg>=5.3.0",
-    "scipy>=1.18.0",
+    "scipy==1.18.1",
     "vtk>=9.6.2",
 ]
 
 [project.scripts]
 sim-fea = "fea.main:main"
 
+[dependency-groups]
+dev = [
+    "pyright>=1.1.411",
+    "ruff>=0.16.6",
+]
+
 [tool.uv.sources]
 mura-shared = { path = "../shared", editable = true }
 
 [tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py312"
 src = ["src"]
 
 [tool.ruff.lint]
-extend-select = ["BLE"]
+extend-select = [
+    "ANN",
+    "BLE001",
+    "B",
+    "A",
+    "C4",
+    "FA",
+    "ICN",
+    "PIE",
+    "PT",
+    "Q",
+    "RSE",
+    "RET",
+    "SLF",
+    "SIM",
+    "TC",
+    "ARG",
+    "PTH",
+    "C90",
+    "NPY",
+    "PD",
+    "N",
+    "PERF",
+    "E",
+    "W",
+    "D",
+    "F",
+    "I",
+    "PL",
+    "TID",
+    "UP",
+    "FURB",
+    "RUF",
+]
+
+ignore = ["RUF100"]
+logger-objects = ["loguru.logger"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"__future__.annotations".msg = "Do not defer annotations globally; quote forward references where required."
+"logging".msg = "Use loguru.logger for logging."
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["TID252"]
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.pyright]
+typeCheckingMode = "basic"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+exclude = ["**/.venv", "**/__pycache__", "**/out"]

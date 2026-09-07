@@ -1,3 +1,5 @@
+"""Worker process that runs the finite element solve for each configured mesh."""
+
 import numpy as np
 from loguru import logger
 from shared.core.worker import Worker
@@ -10,16 +12,19 @@ from fea.solver.fem import FEMSolver
 
 
 class SolverWorker(Worker):
-    """
-    Reads each mesh file listed in the config and runs the FEA simulation on
-    it. Exits once all files are processed or shutdown is requested.
+    """Worker that runs the FEA simulation for each configured mesh file.
+
+    Reads each mesh file listed in the config and runs the simulation on it. Exits once all files are processed or
+    shutdown is requested.
     """
 
     def __init__(self, config: SimConfig) -> None:
+        """Store the simulation configuration for the worker process."""
         super().__init__()
         self.config = config
 
     def main(self) -> None:
+        """Solve every mesh named in the configuration and render the results."""
         reader = MeshReader()
         renderer = Renderer()
 

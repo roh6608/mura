@@ -1,3 +1,5 @@
+"""Context managers for external library sessions, currently gmsh."""
+
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -7,9 +9,7 @@ from loguru import logger
 
 @contextmanager
 def gmsh_session() -> Iterator[None]:
-    """
-    Context manager to handle Gmsh initialisation and finalisation
-    """
+    """Context manager to handle Gmsh initialisation and finalisation."""
     try:
         logger.info("Attempting to initialise Gmsh...")
         gmsh.initialize()  # pyright: ignore[reportUnknownMemberType]

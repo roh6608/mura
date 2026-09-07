@@ -1,3 +1,5 @@
+"""Linear-elastic finite element solver for tet10 meshes carrying eigenstrain."""
+
 import time
 
 import numpy as np
@@ -12,6 +14,8 @@ from fea.core.types import DirichletBC, EigenStrain, MeshData
 
 
 class FEMSolver:
+    """Linear-elastic finite element solver for tet10 meshes carrying eigenstrain."""
+
     def __init__(
         self,
         mesh: MeshData,
@@ -20,6 +24,7 @@ class FEMSolver:
         eigen_strains: list[EigenStrain],
         dirichlet_bcs: list[DirichletBC],
     ) -> None:
+        """Store the mesh, material properties, eigenstrains and boundary conditions."""
         logger.info("Initialising FEM solver...")
         self.mesh = mesh
         self.youngs_modulus = youngs_modulus
@@ -41,9 +46,9 @@ class FEMSolver:
         self.gp = np.array([[a, b, b], [b, a, b], [b, b, a], [b, b, b]])
         self.weights = np.array([0.25, 0.25, 0.25, 0.25]) / 6.0
 
-        self.u_sol: None | NDArray[np.float64] = None
-        self.kmat: None | sp.csr_matrix = None
-        self.fvec: None | NDArray[np.float64] = None
+        self.u_sol: NDArray[np.float64] | None = None
+        self.kmat: sp.csr_matrix | None = None
+        self.fvec: NDArray[np.float64] | None = None
 
         self.element_strains = None
 
@@ -58,10 +63,8 @@ class FEMSolver:
         dmat[5, 5] = mu
         return dmat
 
-    def _get_quadratic_dn_dxi(
-        self, xi: float, eta: float, zeta: float
-    ) -> NDArray[np.float64]:
-        """Derivatives of 10-node Serendipity Tetrahedron shape functions."""
+    def _get_quadratic_dn_dxi(self, xi: float, eta: float, zeta: float) -> NDArray[np.float64]:
+        """Return the derivatives of 10-node Tetrahedron shape functions."""
         r = 1.0 - xi - eta - zeta
 
         return np.array(
@@ -80,9 +83,7 @@ class FEMSolver:
             dtype=np.float64,
         )
 
-    def _construct_bmat_at_point(
-        self, dn_dx: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
+    def _construct_bmat_at_point(self, dn_dx: NDArray[np.float64]) -> NDArray[np.float64]:
         """Assembles B-matrix from global derivatives."""
         num_elems = dn_dx.shape[0]
         bmat = np.zeros((num_elems, 6, 30), dtype=np.float64)
@@ -101,6 +102,7 @@ class FEMSolver:
         return bmat
 
     def apply_dirichlet_bcs(self) -> None:
+        """Apply the Dirichlet boundary conditions to the assembled system."""
         logger.info("Applying Dirichlet boundary conditions...")
 
         fixed_dofs: list[int] = []
@@ -124,31 +126,25 @@ class FEMSolver:
         dofs = np.asarray(fixed_dofs, dtype=np.int64)
         values = np.asarray(fixed_values, dtype=np.float64)
 
-        # Symmetric elimination: move the known-displacement contributions to
-        # the RHS, then zero both rows and columns (unit diagonal on fixed
-        # dofs) so kmat stays symmetric positive definite for CG.
         u_fixed = np.zeros(self.num_dof, dtype=np.float64)
         u_fixed[dofs] = values
         self.fvec -= self.kmat @ u_fixed
 
         keep = np.ones(self.num_dof, dtype=np.float64)
         keep[dofs] = 0.0
-        self.kmat = (
-            sp.diags(keep) @ self.kmat @ sp.diags(keep) + sp.diags(1.0 - keep)
-        ).tocsr()
+        self.kmat = (sp.diags(keep) @ self.kmat @ sp.diags(keep) + sp.diags(1.0 - keep)).tocsr()
         self.fvec[dofs] = values
 
         logger.success("Boundary conditions applied.")
 
     def _constrain_dof(self, dof_idx: int, value: float) -> None:
-        """
-        Applies the Penalty Method to a specific Degree of Freedom.
-        """
+        """Apply the Penalty Method to a specific Degree of Freedom."""
         penalty = 1e15
         self.kmat[dof_idx, dof_idx] = penalty
         self.fvec[dof_idx] = penalty * value
 
     def assemble_system(self) -> None:
+        """Assemble the global stiffness matrix and the eigenstrain load vector."""
         logger.info("Assembling global system...")
         start = time.perf_counter()
         num_elems = self.elements.shape[0]
@@ -161,8 +157,7 @@ class FEMSolver:
                 mask = self.element_tags == phys_id
 
                 e_star = np.array(
-                    [strain.exx, strain.eyy, strain.ezz, strain.exy, strain.eyz, strain.ezx],
-                    dtype=np.float64,
+                    [strain.exx, strain.eyy, strain.ezz, strain.exy, strain.eyz, strain.ezx], dtype=np.float64
                 )
 
                 self.element_strains[mask] = e_star
@@ -189,29 +184,22 @@ class FEMSolver:
             bt_d = np.matmul(bmat.transpose(0, 2, 1), self.dmat)
             ke_total += np.matmul(bt_d, bmat) * dv[:, None, None]
 
-            fe_total += (
-                np.matmul(bmat.transpose(0, 2, 1), sig_star_all).squeeze() * dv[:, None]
-            )
+            fe_total += np.matmul(bmat.transpose(0, 2, 1), sig_star_all).squeeze() * dv[:, None]
 
-        dof_indices = (self.elements[:, :, None] * 3 + np.arange(3)).reshape(
-            num_elems, 30
-        )
+        dof_indices = (self.elements[:, :, None] * 3 + np.arange(3)).reshape(num_elems, 30)
         rows = dof_indices[:, :, None].repeat(30, axis=2).flatten()
         cols = dof_indices[:, None, :].repeat(30, axis=1).flatten()
 
-        self.kmat = sp.csr_matrix(
-            (ke_total.flatten(), (rows, cols)), shape=(self.num_dof, self.num_dof)
-        )
+        self.kmat = sp.csr_matrix((ke_total.flatten(), (rows, cols)), shape=(self.num_dof, self.num_dof))
         self.fvec = np.zeros(self.num_dof, dtype=np.float64)
         np.add.at(self.fvec, dof_indices.flatten(), fe_total.flatten())
 
         logger.success(f"Assembly finished in {time.perf_counter() - start:.2f}s")
 
     def _get_rigid_body_modes(self) -> NDArray[np.float64]:
-        """
-        The six rigid body modes (three translations, three rotations) of the
-        mesh. These span the near-nullspace of the elasticity operator, which
-        AMG needs in order to coarsen it well.
+        """Return the six rigid body modes of the mesh.
+
+        Three translations and three rotations.
         """
         x, y, z = self.nodes.T
         modes = np.zeros((self.num_dof, 6), dtype=np.float64)
@@ -232,19 +220,14 @@ class FEMSolver:
         return modes
 
     def _get_preconditioner(self) -> spla.LinearOperator:
-        """
-        Smoothed aggregation AMG preconditioner. Unlike a Jacobi
-        preconditioner it targets the smooth error modes that dominate 3D
-        elasticity, so iteration counts stay low as the mesh is refined.
-        """
+        """Return a smoothed-aggregation AMG preconditioner."""
         start = time.perf_counter()
-        ml = pyamg.smoothed_aggregation_solver(
-            self.kmat, B=self._get_rigid_body_modes(), max_coarse=AMG_MAX_COARSE
-        )
+        ml = pyamg.smoothed_aggregation_solver(self.kmat, B=self._get_rigid_body_modes(), max_coarse=AMG_MAX_COARSE)
         logger.debug(f"AMG setup finished in {time.perf_counter() - start:.2f}s")
         return ml.aspreconditioner(cycle="V")
 
     def solve(self) -> NDArray[np.float64]:
+        """Return the nodal displacements, applying the boundary conditions first."""
         logger.info("Applying boundary conditions and solving...")
         start = time.perf_counter()
 
@@ -266,7 +249,7 @@ class FEMSolver:
         return self.u_sol.reshape(-1, 3)
 
     def get_nodal_results(self) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        """Calculates nodal strains and stresses using weighted averaging."""
+        """Calculate nodal strains and stresses using weighted averaging."""
         logger.info("Calculating nodal strains/stresses...")
         start = time.perf_counter()
 
@@ -277,9 +260,7 @@ class FEMSolver:
         nodal_count = np.zeros(self.num_nodes, dtype=np.float64)
 
         el_coords = self.nodes[self.elements]
-        u_elem = self.u_sol[self.elements[:, :, None] * 3 + np.arange(3)].reshape(
-            num_elems, 30, 1
-        )
+        u_elem = self.u_sol[self.elements[:, :, None] * 3 + np.arange(3)].reshape(num_elems, 30, 1)
 
         for pt in range(4):
             xi, eta, zeta = self.gp[pt]
