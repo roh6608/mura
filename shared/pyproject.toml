@@ -12,10 +12,85 @@ dependencies = [
 requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
-# The package root is this directory itself, so the import path is
-# `shared.core...` while the code stays flat at shared/core/.
 [tool.setuptools]
 packages = ["shared", "shared.core"]
 
 [tool.setuptools.package-dir]
 shared = "."
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py312"
+src = ["."]
+
+[tool.ruff.lint]
+extend-select = [
+    "ANN",
+    "BLE001",
+    "B",
+    "A",
+    "C4",
+    "FA",
+    "ICN",
+    "PIE",
+    "PT",
+    "Q",
+    "RSE",
+    "RET",
+    "SLF",
+    "SIM",
+    "TC",
+    "ARG",
+    "PTH",
+    "C90",
+    "NPY",
+    "PD",
+    "N",
+    "PERF",
+    "E",
+    "W",
+    "D",
+    "F",
+    "I",
+    "PL",
+    "TID",
+    "UP",
+    "FURB",
+    "RUF",
+]
+
+ignore = ["RUF100"]
+logger-objects = ["loguru.logger"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"__future__.annotations".msg = "Do not defer annotations globally; quote forward references where required."
+"logging".msg = "Use loguru.logger for logging."
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["TID252"]
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.pyright]
+typeCheckingMode = "basic"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+exclude = ["**/.venv", "**/__pycache__", "**/out"]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.411",
+    "ruff>=0.16.6",
+]
