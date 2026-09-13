@@ -13,9 +13,15 @@ class Worker(ABC):
     cooperatively.
     """
 
-    def __init__(self, name: str | None = None) -> None:
-        """Prepare the worker, defaulting its name to the concrete class name."""
+    def __init__(self, name: str | None = None, daemon: bool = True) -> None:
+        """Prepare the worker, defaulting its name to the concrete class name.
+
+        A daemon process cannot have children, so a worker that runs its own
+        process pool has to pass 'daemon=False'. The manager stops every worker
+        explicitly, terminating any that overruns, so nothing is orphaned either way.
+        """
         self.name = name or type(self).__name__
+        self.daemon = daemon
         self._stop_event = multiprocessing.Event()
         self._process: multiprocessing.Process | None = None
 
@@ -41,7 +47,7 @@ class Worker(ABC):
 
         self._stop_event.clear()
 
-        process = multiprocessing.Process(target=self._run, name=self.name, daemon=True)
+        process = multiprocessing.Process(target=self._run, name=self.name, daemon=self.daemon)
         process.start()
         self._process = process
 

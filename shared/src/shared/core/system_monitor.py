@@ -14,7 +14,6 @@ from shared.core.worker import Worker
 
 BYTES_PER_GIGABYTE = 1024**3
 
-# name, utilisation.gpu, temperature.gpu, memory.used, memory.total
 NVIDIA_SMI_FIELD_COUNT = 5
 
 
