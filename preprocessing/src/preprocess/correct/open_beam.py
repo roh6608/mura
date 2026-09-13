@@ -8,8 +8,8 @@ from types import ModuleType
 import numpy as np
 from loguru import logger
 from numpy.typing import NDArray
+from shared.core.backend import asnumpy
 
-from preprocess.core.backend import asnumpy
 from preprocess.core.config import PreprocessConfig
 from preprocess.core.constants import DETECTOR_COLUMNS, DETECTOR_ROWS, DETECTOR_SHAPE, FRAME_FLOAT32_BYTES
 from preprocess.correct import overlap

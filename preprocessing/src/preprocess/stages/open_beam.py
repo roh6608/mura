@@ -3,8 +3,8 @@
 import itertools
 
 from loguru import logger
+from shared.core.backend import get_backend
 
-from preprocess.core.backend import get_backend
 from preprocess.core.config import PreprocessConfig
 from preprocess.core.constants import OPEN_BEAM_REFERENCE_NAME
 from preprocess.core.preprocessing_types import Kind

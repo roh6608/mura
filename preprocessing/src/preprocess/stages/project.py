@@ -4,8 +4,8 @@ import time
 from pathlib import Path
 
 from loguru import logger
+from shared.core.backend import free_bytes, get_backend
 
-from preprocess.core.backend import free_bytes, get_backend
 from preprocess.core.config import PreprocessConfig
 from preprocess.core.constants import FRAME_FLOAT32_BYTES, MANIFEST_NAME, OPEN_BEAM_REFERENCE_NAME
 from preprocess.core.preprocessing_types import ProjReport, ProjTask, Status

@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING
 import cv2
 import numpy as np
 from loguru import logger
+from shared.core.backend import asnumpy, get_backend
 
 from preprocess.calibrate import tofaxis
-from preprocess.core.backend import asnumpy, get_backend
 from preprocess.core.constants import DETECTOR_SHAPE
 from preprocess.core.preprocessing_types import CubeLayout, ProjectionMeta, ProjReport, ProjTask
 

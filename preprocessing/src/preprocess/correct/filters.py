@@ -10,8 +10,8 @@ from types import ModuleType
 import cv2
 import numpy as np
 from numpy.typing import NDArray
+from shared.core.backend import array_module
 
-from preprocess.core.backend import array_module
 from preprocess.core.constants import CUBE_DIMENSIONS, CV2_FLOAT_MEDIAN_KSIZES, FRAME_DIMENSIONS
 
 

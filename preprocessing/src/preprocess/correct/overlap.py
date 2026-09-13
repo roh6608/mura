@@ -9,8 +9,8 @@ from types import ModuleType
 
 import numpy as np
 from numpy.typing import NDArray
+from shared.core.backend import asnumpy, check_same_module
 
-from preprocess.core.backend import asnumpy, check_same_module
 from preprocess.core.constants import CUBE_DIMENSIONS
 from preprocess.core.preprocessing_types import BoundaryStep, ToFAxis
 
