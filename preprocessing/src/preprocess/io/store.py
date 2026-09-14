@@ -8,9 +8,9 @@ from typing import Self
 import h5py
 import numpy as np
 from numpy.typing import NDArray
+from shared.core.h5 import dataset
 
 from preprocess.core.constants import CUBE_SCHEMA_VERSION, INDEX_NAME
-from preprocess.core.h5 import dataset
 from preprocess.core.preprocessing_types import CubeLayout, ProjectionMeta, ToFAxis
 
 

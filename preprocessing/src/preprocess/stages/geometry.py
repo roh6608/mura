@@ -8,11 +8,11 @@ import h5py
 import numpy as np
 from loguru import logger
 from numpy.typing import NDArray
+from shared.core.h5 import dataset
 
 from preprocess.calibrate import geometry
 from preprocess.core.config import Geometry, PreprocessConfig
 from preprocess.core.constants import GEOMETRY_NAME, INDEX_NAME
-from preprocess.core.h5 import dataset
 from preprocess.core.preprocessing_types import AxisOrientation, CentreOfMass, CentreOfRotationFit, Profiles, TiltFit
 from preprocess.utils import plots
 

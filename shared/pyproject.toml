@@ -9,6 +9,9 @@ dependencies = [
     "psutil>=5.9",
 ]
 
+[project.optional-dependencies]
+h5 = ["h5py==3.16.0"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
